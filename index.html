@@ -552,7 +552,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
           <button onclick="setMode('pa','prc',this)">$/kg</button>
         </div>
       </div>
-      <div class="cw" style="height:340px"><canvas id="c-pa-bar"></canvas></div>
+      <div class="cw" style="height:560px"><canvas id="c-pa-bar"></canvas></div>
     </div>
     <div class="cc">
       <div class="ch"><div class="ct ct-donut">Participación FOB</div></div>
@@ -604,11 +604,11 @@ tr:hover td{background:rgba(255,255,255,.025)}
   <div class="cg cg-2">
     <div class="cc">
       <div class="ch"><div class="ct">Importadores por país</div></div>
-      <div class="cw" style="height:200px"><canvas id="c-imp-npa"></canvas></div>
+      <div class="cw" style="height:340px"><canvas id="c-imp-npa"></canvas></div>
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">FOB por país de importador</div></div>
-      <div class="cw" style="height:200px"><canvas id="c-imp-pa-fob"></canvas></div>
+      <div class="cw" style="height:340px"><canvas id="c-imp-pa-fob"></canvas></div>
     </div>
   </div>
 </div>
@@ -746,7 +746,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Top 15 países por kg</div></div>
-      <div class="cw" style="height:220px"><canvas id="c-vkg-pa"></canvas></div>
+      <div class="cw" style="height:420px"><canvas id="c-vkg-pa"></canvas></div>
     </div>
   </div>
 </div>
@@ -787,7 +787,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Top 15 países por FOB</div></div>
-      <div class="cw" style="height:220px"><canvas id="c-vusd-pa"></canvas></div>
+      <div class="cw" style="height:420px"><canvas id="c-vusd-pa"></canvas></div>
     </div>
   </div>
 </div>
@@ -1063,14 +1063,15 @@ function mkBar(id, labels, values, color='#4da6ff', horizontal=false){
     options:{
       indexAxis: horizontal?'y':'x',
       responsive:true, maintainAspectRatio:false,
+      layout:{padding:{right: horizontal?24:0}},
       plugins:{legend:{display:false}},
       scales:{
-        x:{ticks:{color:'#5a6478',font:{size:9},maxRotation:horizontal?0:35},
+        x:{ticks:{color:'#FFFFFF',font:{size:horizontal?10:9},maxRotation:horizontal?0:35},
            grid:{color:'rgba(255,255,255,.04)'},
-           afterFit: horizontal?ax=>{ax.paddingRight=8}:undefined},
-        y:{ticks:{color:'#5a6478',font:{size:9}},
+           afterFit: horizontal?ax=>{ax.paddingRight=24}:undefined},
+        y:{ticks:{color:'#FFFFFF',font:{size:horizontal?11:9},padding:horizontal?6:0},
            grid:{color:horizontal?'rgba(255,255,255,.04)':'none'},
-           afterFit: horizontal?ax=>{ax.width=140}:undefined}
+           afterFit: horizontal?ax=>{ax.width=170}:undefined}
       }
     }
   });
