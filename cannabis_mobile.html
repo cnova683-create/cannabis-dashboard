@@ -390,6 +390,15 @@ tr:hover td{background:rgba(255,255,255,.025)}
   .mf-drop{max-height:50vh}
   .mf-item{padding:11px 12px;font-size:13px}
 }
+.sh{display:flex;flex-direction:column;gap:11px;padding:2px 0}
+.sh-row{display:flex;flex-direction:column;gap:5px}
+.sh-top{display:flex;align-items:center;gap:8px;font-size:11px}
+.sh-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.sh-lbl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)}
+.sh-pct{color:var(--mu2);font-size:11px;flex-shrink:0}
+.sh-bar{height:7px;background:var(--s3);border-radius:4px;overflow:hidden}
+.sh-fill{height:100%;border-radius:4px;transition:width .4s}
+@media(max-width:600px){.sh-top{font-size:12px}.sh-bar{height:8px}}
 </style>
 </head>
 <body>
@@ -495,7 +504,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Mix por producto</div></div>
-      <div class="dn-wrap" style="height:220px"><div class="cw dn-chart"><canvas id="c-ov-pie"></canvas></div><div class="dn-legend" id="lg-ov-pie" style="height:200px"></div></div>
+      <div class="sh" id="sh-ov-pie"></div>
     </div>
   </div>
   <div class="cg cg-2">
@@ -594,7 +603,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Participación FOB Top 10</div></div>
-      <div class="dn-wrap" style="height:240px"><div class="cw dn-chart"><canvas id="c-imp-pie"></canvas></div><div class="dn-legend" id="lg-imp-pie" style="height:220px"></div></div>
+      <div class="sh" id="sh-imp-pie"></div>
     </div>
   </div>
   <div class="cg cg-2">
@@ -715,7 +724,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Participación FOB</div></div>
-      <div class="dn-wrap" style="height:240px"><div class="cw dn-chart"><canvas id="c-pr-pie"></canvas></div><div class="dn-legend" id="lg-pr-pie" style="height:220px"></div></div>
+      <div class="sh" id="sh-pr-pie"></div>
     </div>
   </div>
 
@@ -813,10 +822,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
   <div class="cg cg-2">
     <div class="cc">
       <div class="ch"><div class="ct">Kg por producto</div></div>
-      <div class="dn-wrap">
-        <div class="cw dn-chart"><canvas id="c-vkg-prod"></canvas></div>
-        <div class="dn-legend" id="lg-vkg-prod"></div>
-      </div>
+      <div class="sh" id="sh-vkg-prod"></div>
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Top 15 países por kg</div></div>
@@ -852,10 +858,7 @@ tr:hover td{background:rgba(255,255,255,.025)}
   <div class="cg cg-2">
     <div class="cc">
       <div class="ch"><div class="ct">FOB por producto</div></div>
-      <div class="dn-wrap">
-        <div class="cw dn-chart"><canvas id="c-vusd-prod"></canvas></div>
-        <div class="dn-legend" id="lg-vusd-prod"></div>
-      </div>
+      <div class="sh" id="sh-vusd-prod"></div>
     </div>
     <div class="cc">
       <div class="ch"><div class="ct">Top 15 países por FOB</div></div>
@@ -1174,6 +1177,24 @@ function mkDoughnut(id, labels, values){
   });
 }
 
+function mkShare(containerId, labels, values, limit){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  const total = values.reduce((s,v)=>s+v,0);
+  const items = labels.map((l,i)=>({l, v:values[i]})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const shown = limit ? items.slice(0,limit) : items;
+  if(!items.length || total<=0){ el.innerHTML='<div style="color:var(--mu);font-size:11px">Sin datos</div>'; return; }
+  const max = shown[0].v;
+  el.innerHTML = shown.map((it,i)=>{
+    const pct = it.v/total*100;
+    const txt = pct>0 && pct<0.1 ? '<0.1%' : pct.toFixed(1)+'%';
+    return `<div class="sh-row" title="${it.l}: ${txt}">
+      <div class="sh-top"><span class="sh-dot" style="background:${PAL[i%12]}"></span><span class="sh-lbl">${it.l}</span><span class="sh-pct">${txt}</span></div>
+      <div class="sh-bar"><div class="sh-fill" style="width:${Math.max(it.v/max*100,0.8).toFixed(1)}%;background:${PAL[i%12]}"></div></div>
+    </div>`;
+  }).join('');
+}
+
 function mkDoughnutScroll(id, legendId, labels, values){
   const ctx = document.getElementById(id);
   if(!ctx) return;
@@ -1328,7 +1349,7 @@ function renderOv(d){
   }
 
   const byProd = agg(d,'p').sort((a,b)=>b.f-a.f).filter(r=>r.k);
-  mkDoughnutScroll('c-ov-pie','lg-ov-pie', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.f));
+  mkShare('sh-ov-pie', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.f),5);
 
   const mE = getMode('ov-ex');
   const byEx = agg(d,'e').sort((a,b)=>b.f-a.f);
@@ -1403,7 +1424,7 @@ function renderImp(d){
   const m = getMode('imp');
   const valFn = m==='kg'?r=>r.kg:m==='prc'?r=>r.prc:r=>r.f;
   mkRank('rl-imp', byI, valFn, r=>r.k.split(' ').slice(0,3).join(' '));
-  mkDoughnutScroll('c-imp-pie','lg-imp-pie', byI.slice(0,10).map(r=>r.k.split(' ').slice(0,3).join(' ')), byI.slice(0,10).map(r=>r.f));
+  mkShare('sh-imp-pie', byI.slice(0,10).map(r=>r.k.split(' ').slice(0,3).join(' ')), byI.slice(0,10).map(r=>r.f));
 
   const byPa = Object.entries(grp(d,'pa')).map(([pa,rows])=>({
     pa, ni:new Set(rows.map(r=>r.i)).size, f:rows.reduce((s,r)=>s+r.f,0)
@@ -1501,7 +1522,7 @@ function renderPr(d){
   const m = getMode('pr');
   const valFn = m==='kg'?r=>r.kg:m==='prc'?r=>r.prc:r=>r.f;
   mkRank('rl-pr', byP, valFn, r=>nameOrFallback(r.k));
-  mkDoughnutScroll('c-pr-pie','lg-pr-pie', byP.map(r=>nameOrFallback(r.k)), byP.map(r=>r.f));
+  mkShare('sh-pr-pie', byP.map(r=>nameOrFallback(r.k)), byP.map(r=>r.f),5);
 
   const singleYr = GF.yr.size===1 ? [...GF.yr][0] : null;
   const trendBox = document.getElementById('pr-trend-box');
@@ -1667,7 +1688,7 @@ function renderVkg(d){
     mkBar('c-vkg-yr', byYr.map(r=>r.y), byYr.map(r=>r.kg), '#f472b6');
   }
 
-  mkDoughnutScroll('c-vkg-prod', 'lg-vkg-prod', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.kg));
+  mkShare('sh-vkg-prod', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.kg));
   const byPa = agg(d,'pa').sort((a,b)=>b.kg-a.kg).slice(0,15);
   mkBar('c-vkg-pa', byPa.map(r=>r.k), byPa.map(r=>r.kg), '#f472b6', true);
 }
@@ -1696,7 +1717,7 @@ function renderVusd(d){
     mkBar('c-vusd-yr', byYr.map(r=>r.y), byYr.map(r=>r.f), '#ff6060');
   }
 
-  mkDoughnutScroll('c-vusd-prod', 'lg-vusd-prod', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.f));
+  mkShare('sh-vusd-prod', byProd.map(r=>nameOrFallback(r.k)), byProd.map(r=>r.f));
   const byPa = agg(d,'pa').sort((a,b)=>b.f-a.f).slice(0,15);
   mkBar('c-vusd-pa', byPa.map(r=>r.k), byPa.map(r=>r.f), '#ff6060', true);
 }
